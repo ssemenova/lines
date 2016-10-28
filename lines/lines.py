@@ -34,16 +34,19 @@ def main():
     error = .5
     for template in templatesLatencies:
         print("Executing Queries")
-        if bar_support: bar = progressbar.ProgressBar(max_value=249)
-        for i in range(250):
-            if not bar_support: print("Executing query", i)
+        if bar_support: 
+            bar = progressbar.ProgressBar(max_value=249)
+        else:
+            bar = lambda x: x # bar does nothing if it can't be imported
+        for i in bar(range(250)):
+            if not bar_support: 
+                print("Executing query", i)
             randomParam = random.randrange(1,4)
             x.append(randomParam)
             resultLatency = make_queries(conn, randomParam, template)
             y.append(resultLatency)
             # TODO: add +/- error
             classification.append(getClassification(resultLatency, template[1], error))
-            bar.update(i)
 
     plt.figure()
     plt.scatter(x,y)
