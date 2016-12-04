@@ -1,14 +1,17 @@
 /**
  * Created by seaurchi on 12/3/16.
  */
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 public class Fragment {
-    private LinkedList<Integer> index;
-    private LinkedList<int[]> rows;
+    private Map<Integer, Integer> index;
+    private List<int[]> rows;
 
     public Fragment() {
-        index = new LinkedList();
+        index = new HashMap();
         rows = new LinkedList();
     }
 
@@ -17,11 +20,33 @@ public class Fragment {
     }
 
     public void addIndex(int index) {
-        this.index.add(index);
+        //counts up the number of rows that match the index
+        //and places that in the hashmap
+        int currAttr = rows.get(0)[0];
+        int matchingRows = 0;
+
+        int i = 0;
+        while (currAttr < index && i < this.rows.size()) {
+            matchingRows++;
+            currAttr = rows.get(i)[0];
+            i++;
+        }
+        this.index.put(index, matchingRows);
     }
 
-    public LinkedList<Integer> getIndex() {
+    public Map<Integer, Integer> getIndex() {
         return index;
+    }
+
+    public String toString() {
+        String stringstring = "";
+
+        for (Integer key : index.keySet()) {
+            stringstring += "/ i" + key + " r" + index.get(key);
+//            System.out.println("Rows = " + index.get(key));
+        }
+
+        return stringstring;
     }
 }
 

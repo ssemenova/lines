@@ -2,9 +2,11 @@
  * Created by seaurchi on 12/3/16.
  */
 import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 public class Node {
-    private HashSet<Fragment> fragments;
+    private Set<Fragment> fragments;
     private int network;
     private int scan;
 
@@ -26,16 +28,21 @@ public class Node {
         return network;
     }
 
-    public void doScan() {
-        scan++;
+    public void doScan(Fragment frag, int target) {
+        //for the given fragment, how many rows need to be scanned?
+        scan += frag.getIndex().get(target);
     }
 
-    public void doNetwork() {
-        network++;
+    public void doNetwork(Fragment frag, int target) {
+        network += frag.getIndex().get(target);
+    }
+
+    public Set<Fragment> getFragments() {
+        return fragments;
     }
 
     public String toString() {
-        String printOut = "";
+        String printOut = "node";
 
         for (Fragment frag : fragments) {
             printOut += frag.toString();
