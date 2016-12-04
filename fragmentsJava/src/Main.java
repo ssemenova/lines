@@ -26,17 +26,12 @@ public class Main {
     public static void runThroughWorkload(List<String> workload, Map<Integer, List<Fragment>> index, List<Node> nodes) {
         for (String query : workload) {
             Map<Integer, List<Fragment>> relevantFrags = processQuery(query, index);
-            List<Node> relevantNodes = new LinkedList<>();
 
-            System.out.println(nodes);
             for (Integer key : relevantFrags.keySet()) {
                 for (Fragment frag : relevantFrags.get(key)) {
                     for (Node node : nodes) {
-                        System.out.println("here");
                         if (node.getFragments().contains(frag)) {
-                            System.out.println(frag);
-                            node.doScan(frag, key);
-                            node.doNetwork(frag, key);
+                            node.doScanNetwork(frag, key);
                         }
                     }
                 }
@@ -45,14 +40,16 @@ public class Main {
             System.out.println("Query " + query);
             for (Node node : nodes) {
                 System.out.println("-----");
-                System.out.println("NODE = ");
-                System.out.println("Networks: " + node.getNetworks());
-                System.out.println("Scans: " + node.getScans());
+                System.out.println(node);
+                node.resetScanNetwork();
             }
             System.out.println("========");
         }
     }
 
+    /*
+        Parse query and return a map of values to relevant fragments
+     */
     public static Map<Integer, List<Fragment>> processQuery(String query, Map<Integer, List<Fragment>> index) {
         Map<Integer, List<Fragment>> relevantFrags = new HashMap<>();
         int start, end;
@@ -63,7 +60,7 @@ public class Main {
             end = Integer.parseInt(split[1]);
         } else if (query.contains(">")) {
             start = Integer.parseInt(query.replace(">", ""));
-            end = 2017;
+            end = 2016;
         } else if (query.contains("<")) {
             start = 2000;
             end = Integer.parseInt(query.replace("<", ""));
@@ -72,11 +69,9 @@ public class Main {
             end = start;
         }
 
-        for (int i = start; i < end; i++) {
+        for (int i = start; i <= end; i++) {
             relevantFrags.put(i, index.get(i));
         }
-
-//        relevantFrags = index.entrySet().stream().filter(e -> e.getKey() >= start && e.getKey() <= end).map(e -> e.getValue()).flatMap(l -> l.stream()).collect(Collectors.toList());
 
         return relevantFrags;
     }
@@ -151,9 +146,7 @@ public class Main {
                 }
                 newAttr = currAttr != row[0];
             }
-            for (Integer num : indexes) {
-                tempFrag.addIndex(num);
-            }
+            indexes.forEach(tempFrag::addIndex);
             fragments.add(tempFrag);
         }
 
@@ -195,20 +188,21 @@ public class Main {
 
         // change this!
         String wl = "2010\n" +
-                "2012-2013\n";
-//                "2013\n" +
-//                ">2012\n" +
-//                "2012\n" +
-//                "2012-2013\n" +
-//                ">2010\n" +
-//                "2011-2012\n" +
-//                "2012\n" +
-//                "<2013\n" +
-//                "2012-2013\n" +
-//                "<2013\n" +
-//                "2011-2013\n" +
-//                "2012\n" +
-//                "2013\n";
+                "2012-2013\n" +
+                "2004-2010\n" +
+                "2013\n" +
+                ">2012\n" +
+                "2012\n" +
+                "2012-2013\n" +
+                ">2010\n" +
+                "2011-2012\n" +
+                "2012\n" +
+                "<2013\n" +
+                "2012-2013\n" +
+                "<2013\n" +
+                "2011-2013\n" +
+                "2012\n" +
+                "2013\n";
 
         Collections.addAll(workload, wl.split("\n"));
 

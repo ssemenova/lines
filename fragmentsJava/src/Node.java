@@ -28,13 +28,14 @@ public class Node {
         return network;
     }
 
-    public void doScan(Fragment frag, int target) {
+    public void doScanNetwork(Fragment frag, int target) {
         //for the given fragment, how many rows need to be scanned?
         scan += frag.getIndex().get(target);
+        network += frag.getIndex().get(target);
     }
 
-    public void doNetwork(Fragment frag, int target) {
-        network += frag.getIndex().get(target);
+    public void resetScanNetwork() {
+        scan = 0; network = 0;
     }
 
     public Set<Fragment> getFragments() {
@@ -42,12 +43,7 @@ public class Node {
     }
 
     public String toString() {
-        String printOut = "node";
-
-        for (Fragment frag : fragments) {
-            printOut += frag.toString();
-        }
-        return printOut;
+        return "NODE= networks: " + network + ", scans: " + scan;
     }
 
 }

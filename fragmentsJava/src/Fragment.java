@@ -26,8 +26,10 @@ public class Fragment {
         int matchingRows = 0;
 
         int i = 0;
-        while (currAttr < index && i < this.rows.size()) {
-            matchingRows++;
+        while (currAttr <= index && i < this.rows.size()) {
+            if (currAttr == index) {
+                matchingRows++;
+            }
             currAttr = rows.get(i)[0];
             i++;
         }
@@ -42,8 +44,7 @@ public class Fragment {
         String stringstring = "";
 
         for (Integer key : index.keySet()) {
-            stringstring += "/ i" + key + " r" + index.get(key);
-//            System.out.println("Rows = " + index.get(key));
+            stringstring += " - i" + key + " r" + index.get(key);
         }
 
         return stringstring;
