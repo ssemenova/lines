@@ -44,6 +44,7 @@ def main(fragType, wltxt, dbcsv, numberOfNodes, valRangestxt=None, nodeToFragtxt
             if ((row[valAttrIndex] >= int(currValRange[0])) and (row[valAttrIndex] <= int(currValRange[1]))):
                 fragments[i].addRow(row)
             else:
+                print(fragments)
                 fragments.append(Fragment())
                 i += 1
                 fragments[i].description.append(currValRange)
@@ -82,22 +83,22 @@ def main(fragType, wltxt, dbcsv, numberOfNodes, valRangestxt=None, nodeToFragtxt
                 checkYearRange(node, query, "=", valAttrIndex)
 
     for node in nodes:
-        print("SEND = " + node.send)
-        print("SCAN = " + node.scan)
+        print("SEND = " + str(node.send))
+        print("SCAN = " + str(node.scan))
         print("-----")
 
 # I know this is bad bear with me
-def checkYearRange(node, year, comparator, valueIndex):
+def checkYearRange(node, year, comparator, valAttrIndex):
     for description, frag in zip(node.description, node.fragments):
         if (comparator == ">"):
-            if (int(description[0]) >= year):
-                for row in frag:
+            if (description[0] >= year):
+                for row in frag.rows:
                     node.scan += 1
                     if (row[valAttrIndex] >= year):
                         node.send += 1
         elif (comparator == "<"):
-            if (int(description[0] <= year)):
-                for row in frag:
+            if (description[0] <= year):
+                for row in frag.rows:
                     node.scan += 1
                     if (row[valAttrIndex] <= year):
                         node.send += 1
@@ -105,13 +106,13 @@ def checkYearRange(node, year, comparator, valueIndex):
             yearStart = year[0]
             yearEnd = year[1]
             if ((yearStart >= description[0]) and (yearStart <= description[1]) or (yearEnd >= description[0]) and (yearEnd <= description[1])):
-                for row in frag:
+                for row in frag.rows:
                     node.scan += 1
                     if ((row[valAttrIndex] >= yearStart) or (row[valAttrIndex] <= yearEnd)):
                         node.send += 1
         else:  # date range OR date equality
             if ((year >= description[0]) and (year <= description[1])):
-                for row in frag:
+                for row in frag.rows:
                     node.scan += 1
                     if (row[valAttrIndex] == year):
                         node.send += 1
@@ -122,7 +123,7 @@ def generateDB():
     numEntries = 200
 
     for i in range(0, numEntries):
-        dbChanges.append([random.randrange(0,1000), random.randrange(1950, 2020)])
+        dbChanges.append([random.randrange(0,1000), random.randrange(2000, 2016)])
 
     return dbChanges
 
