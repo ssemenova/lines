@@ -23,27 +23,21 @@ public class Node {
     public int getScans() {
         return scan;
     }
+    public void addScans(int scans) { this.scan += scans; }
 
     public int getNetworks() {
         return network;
     }
+    public void addNetworks(int network) { this.network += network; }
 
-    public void doScanNetwork(Fragment frag, int target) {
-        //for the given fragment, how many rows need to be scanned?
-        scan += frag.getIndex().get(target);
-        network += frag.getIndex().get(target);
-    }
-
-    public void resetScanNetwork() {
-        scan = 0; network = 0;
-    }
+    public void resetScanNetwork() { scan = 0; network = 0; }
 
     public Set<Fragment> getFragments() {
         return fragments;
     }
 
     public String toString() {
-        return "NODE= networks: " + network + ", scans: " + scan;
+//        return "NODE= networks: " + network + ", scans: " + scan;
+        return network + ", " + scan;
     }
-
 }
