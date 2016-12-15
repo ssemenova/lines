@@ -38,6 +38,6 @@ public class Node {
 
     public String toString() {
 //        return "NODE= networks: " + network + ", scans: " + scan;
-        return network + ", " + scan;
+        return " " + fragments;
     }
 }

@@ -22,13 +22,7 @@ public class Fragment {
     }
 
     public String toString() {
-        String stringstring = "";
-
-        for (int[] row : rows) {
-            stringstring += " " + row[0];
-        }
-
-        return stringstring;
+        return ""+rows.size();
     }
 }
 

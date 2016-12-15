@@ -1,49 +1,112 @@
+import java.awt.*;
 import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class Main {
     public static void main(String[] args) {
         // setup - change all these values!
-        int fragType = 1; // 0 - hash, 1 - value
-        List<int[]> valRanges = (fragType == 1) ? generateValRanges() : null;
         List<Query> workload = generateWorkload();
-        int numNodes = 1;
-        int numFrags = 5; // only needed/used for hash fragmentation type (for value frag type, number of fragments is determined by the value ranges list)
-        List<int[]> db = generateDB();
 
-        // create fragments, nodes, and an index
-        Map<Integer, List<Fragment>> index = new HashMap<>();
-        List<Fragment> fragments = (fragType == 1) ? createFragments(valRanges, db, index) : createFragments(db, numFrags);
-        List<Node> nodes = createNodes(numNodes, fragments);
 
-        runThroughWorkload(workload, index, nodes, fragType, fragments);
+        int[] nodeSizes = {5000, 10000, 50000};
+
+        for (int j = 0; j <= 1; j++) {
+            System.out.println(j);
+
+            for (int i = 0; i < 3; i++) {
+                List<int[]> db = generateDB(nodeSizes[i]);
+
+//                int numNodes = nodeSizes[i];
+                int numNodes = 6;
+                System.out.print(nodeSizes[i] + ", ");
+                int numFrags = 6; // only needed/used for hash fragmentation type (for value frag type, number of fragments is determined by the value ranges list)
+
+
+                int fragType = j; // 0 - hash, 1 - value
+                List<int[]> valRanges = (fragType == 1) ? generateValRanges() : null;
+
+                // create fragments, nodes, and an index
+                Map<Integer, List<Fragment>> index = new HashMap<>();
+                List<Fragment> fragments = (fragType == 1) ? createFragments(valRanges, db, index) : createFragments(db, numFrags);
+                List<Node> nodes = createNodes(numNodes, fragments);
+
+                Random rand = new Random();
+                Node initiator = nodes.get(rand.nextInt(numNodes));
+
+                runThroughWorkload(workload, index, nodes, fragType, fragments, initiator);
+            }
+        }
+
     }
 
     /*
         Runs through the sample workload and prints out,
         for every query, for every node, the amount of networks and scans it had to do
      */
-    public static void runThroughWorkload(List<Query> workload, Map<Integer, List<Fragment>> index, List<Node> nodes, int fragType, List<Fragment> frags) {
+    public static void runThroughWorkload(List<Query> workload, Map<Integer, List<Fragment>> index, List<Node> nodes, int fragType, List<Fragment> frags, Node initiator) {
+        int networks = 0; //the final amount of networks is the sum of all the networks
+        List<Integer> scans; //the final amount of scans is the smallest scan performed
+        List<Integer> finalScans = new LinkedList<>();
+        List<Integer> finalNetworks = new LinkedList<>();
+        Map<Node, int[]> nodeToResults = new HashMap<>();
         for (Query query : workload) {
-            List<Fragment> relevantFrags = (fragType == 1)? query.getFragments(index) : frags;
+            List<Fragment> relevantFrags = (fragType == 1)? query.getFragments(index) : frags; // no index for hash fragmentation
+            networks = 0;
+            scans = new LinkedList<>();
 
             for (Fragment frag : relevantFrags) {
                 for (Node node : nodes) {
                     if (node.getFragments().contains(frag)) {
-                        int[] results = query.matches(frag);
+                        int[] results = query.matches(frag, fragType);
                         node.addScans(results[0]);
                         node.addNetworks(results[1]);
+                        if (!node.equals(initiator)) {
+                            node.addNetworks(results[1]);
+                        }
                     }
                 }
             }
 
-//            System.out.println("Query " + query);
             for (Node node : nodes) {
-                System.out.println(node);
+                //get networks and scans
+                networks += node.getNetworks();
+//                System.out.println(node.getScans());
+                scans.add(node.getScans());
+
+                //used to see the amount of scans and networks for each particular node
+                int[] prevResults = nodeToResults.get(node);
+                if (prevResults==null) {
+                    nodeToResults.put(node, new int[]{node.getNetworks(), node.getScans(), 1});
+                }
+                else {
+                    if (node.getScans() > prevResults[0]) {
+                        nodeToResults.replace(node, new int[]{node.getScans(), node.getNetworks() + prevResults[1], 1 + prevResults[2]});
+                    }
+                    else {
+                        nodeToResults.replace(node, new int[]{prevResults[0], node.getNetworks() + prevResults[1], 1 + prevResults[2]});
+                    }
+                }
+
                 node.resetScanNetwork();
             }
-//            System.out.println("========");
+
+            Collections.sort(scans);
+
+            finalScans.add(scans.get(scans.size()-1));
+            finalNetworks.add(networks);
         }
+        System.out.print(finalScans.stream().mapToInt(val -> val).average().getAsDouble() + ", ");
+        System.out.println(finalNetworks.stream().mapToInt(val -> val).average().getAsDouble());
+
+//        for (Node node : nodeToResults.keySet()) {
+//            System.out.println("--");
+//            System.out.println("Scans = " + nodeToResults.get(node)[0]);
+//            System.out.println("Networks = " + nodeToResults.get(node)[1]/nodeToResults.get(node)[2]);
+//
+//        }
+
+
     }
 
     /*
@@ -118,16 +181,14 @@ public class Main {
      */
     public static List<Fragment> createFragments(List<int[]> db, int numFrags) {
         List<Fragment> fragments = new LinkedList<>();
+        Fragment tempFrag;
 
         for (int i = 0; i < numFrags; i++) {
             fragments.add(new Fragment());
         }
 
-        int attr;
-        Fragment tempFrag;
         for (int[] row : db) {
-            attr = row[0];
-            tempFrag = fragments.get((attr+row[1])%numFrags);
+            tempFrag = fragments.get((row[1]+row[0])%numFrags);
             tempFrag.addRow(row);
         }
 
@@ -139,10 +200,13 @@ public class Main {
      */
     public static List<Query> generateWorkload() {
         Random rand = new Random();
+        Random rg = new Random();
         List<Query> workload = new LinkedList<>();
-        for (int i = 0; i < 1000; i++) {
-            int start = rand.nextInt(17) + 2000;
-            int end = rand.ints(start, (2016 + 1)).findFirst().getAsInt();
+        for (int i = 0; i < 5; i++) {
+            int mid = rand.nextInt(17)+2000;
+            int Y = (int) Math.floor(Math.abs(rg.nextGaussian()*10));
+            int start = Math.max(mid - Y, 2000);
+            int end = Math.min(mid + Y, 2020);
             int extra = rand.nextInt(5)+1;
             workload.add(new DoubleValueQuery(start, end, extra));
         }
@@ -158,10 +222,12 @@ public class Main {
 
         // change this!
         // ranges for "Year" from [x, y)
-        valRanges.add(new int[]{2000, 2002});
-        valRanges.add(new int[]{2002, 2004});
-        valRanges.add(new int[]{2004, 2010});
-        valRanges.add(new int[]{2010, 2017});
+        valRanges.add(new int[]{2000, 2003});
+        valRanges.add(new int[]{2003, 2006});
+        valRanges.add(new int[]{2006, 2009});
+        valRanges.add(new int[]{2009, 2012});
+        valRanges.add(new int[]{2012, 2015});
+        valRanges.add(new int[]{2015, 2020});
 
         return valRanges;
     }
@@ -169,8 +235,7 @@ public class Main {
     /*
         Generates a random database with *numEntries* rows and 2 attributes
      */
-    public static List<int[]> generateDB() {
-        int numEntries = 10000;
+    public static List<int[]> generateDB(int numEntries) {
         List<int[]> db = new LinkedList<>(); // Year, OtherAttribute
         Random rand = new Random();
 

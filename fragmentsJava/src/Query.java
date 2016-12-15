@@ -13,5 +13,5 @@ public abstract class Query {
 
     public abstract Boolean rowMatch(int[] row);
 
-    public abstract int[] matches(Fragment frag);
+    public abstract int[] matches(Fragment frag, int fragType);
 }

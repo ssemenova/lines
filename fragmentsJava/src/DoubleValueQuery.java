@@ -21,9 +21,10 @@ public class DoubleValueQuery extends Query {
         List<Fragment> relevantFrags = new LinkedList<>();
 
         for (int i = start; i <= end; i++) {
-            for (Fragment frag : index.get(i))
-                if (!relevantFrags.contains(frag))
-                    relevantFrags.add(frag);
+            if (index.keySet().contains(i))
+                for (Fragment frag : index.get(i))
+                    if (!relevantFrags.contains(frag))
+                        relevantFrags.add(frag);
         }
 
         return relevantFrags;
@@ -33,7 +34,7 @@ public class DoubleValueQuery extends Query {
         return (row[1] == extra);
     }
 
-    public int[] matches(Fragment frag) {
+    public int[] matches(Fragment frag, int fragType) {
         //for the given fragment, how many rows need to be scanned?
         int[] results = {0,0}; //scans, networks
 
@@ -49,13 +50,14 @@ public class DoubleValueQuery extends Query {
 
         int[] currRow = rows.get(i);
         while (currAttr <= end && i < rows.size()) {
-            results[0]++;
             if (rowMatch(currRow)) {
                 results[1]++;
             }
             currRow = rows.get(i);
             i++;
         }
+
+        results[0] = rows.size();
 
         return results;
     }

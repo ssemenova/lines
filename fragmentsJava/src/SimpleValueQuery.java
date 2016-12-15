@@ -33,7 +33,7 @@ public class SimpleValueQuery extends Query {
         return true;
     }
 
-    public int[] matches(Fragment frag) {
+    public int[] matches(Fragment frag, int fragType) {
         //for the given fragment, how many rows need to be scanned?
         int[] results = {0,0}; //scans, networks
 
