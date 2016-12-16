@@ -31,7 +31,7 @@ public class DoubleValueQuery extends Query {
     }
 
     public Boolean rowMatch(int[] row) {
-        return (row[1] == extra);
+        return (true);
     }
 
     public int[] matches(Fragment frag, int fragType) {
@@ -58,7 +58,6 @@ public class DoubleValueQuery extends Query {
         }
 
         results[0] = rows.size();
-
         return results;
     }
 

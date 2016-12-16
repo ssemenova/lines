@@ -6,35 +6,40 @@ import java.util.stream.Collectors;
 public class Main {
     public static void main(String[] args) {
         // setup - change all these values!
-        List<Query> workload = generateWorkload();
+        List<Query> workload = generateWorkload(1000);
 
 
-        int[] nodeSizes = {5000, 10000, 50000};
+
+
+        int[] dbSizes = {1000, 5000, 10000};
+//        int[] dbSizes = {5000, 10000, 15000};
 
         for (int j = 0; j <= 1; j++) {
             System.out.println(j);
 
-            for (int i = 0; i < 3; i++) {
-                List<int[]> db = generateDB(nodeSizes[i]);
+            for (int i = 0; i < dbSizes.length; i++) {
+                List<int[]> db = generateDB(dbSizes[i]);
+
+
 
 //                int numNodes = nodeSizes[i];
-                int numNodes = 6;
-                System.out.print(nodeSizes[i] + ", ");
-                int numFrags = 6; // only needed/used for hash fragmentation type (for value frag type, number of fragments is determined by the value ranges list)
+                    int numNodes = 3;
+                    System.out.print(dbSizes[i] + ", ");
+                    int numFrags = 3; // only needed/used for hash fragmentation type (for value frag type, number of fragments is determined by the value ranges list)
 
 
-                int fragType = j; // 0 - hash, 1 - value
-                List<int[]> valRanges = (fragType == 1) ? generateValRanges() : null;
+                    int fragType = j; // 0 - hash, 1 - value
+                    List<int[]> valRanges = (fragType == 1) ? generateValRanges() : null;
 
-                // create fragments, nodes, and an index
-                Map<Integer, List<Fragment>> index = new HashMap<>();
-                List<Fragment> fragments = (fragType == 1) ? createFragments(valRanges, db, index) : createFragments(db, numFrags);
-                List<Node> nodes = createNodes(numNodes, fragments);
+                    // create fragments, nodes, and an index
+                    Map<Integer, List<Fragment>> index = new HashMap<>();
+                    List<Fragment> fragments = (fragType == 1) ? createFragments(valRanges, db, index) : createFragments(db, numFrags);
+                    List<Node> nodes = createNodes(numNodes, fragments);
 
-                Random rand = new Random();
-                Node initiator = nodes.get(rand.nextInt(numNodes));
+                    Random rand = new Random();
 
-                runThroughWorkload(workload, index, nodes, fragType, fragments, initiator);
+                    runThroughWorkload(workload, index, nodes, fragType, fragments, numNodes);
+
             }
         }
 
@@ -44,7 +49,9 @@ public class Main {
         Runs through the sample workload and prints out,
         for every query, for every node, the amount of networks and scans it had to do
      */
-    public static void runThroughWorkload(List<Query> workload, Map<Integer, List<Fragment>> index, List<Node> nodes, int fragType, List<Fragment> frags, Node initiator) {
+    public static void runThroughWorkload(List<Query> workload, Map<Integer, List<Fragment>> index, List<Node> nodes, int fragType, List<Fragment> frags, int numNodes) {
+        Random rand = new Random();
+        Node initiator = nodes.get(rand.nextInt(numNodes));
         int networks = 0; //the final amount of networks is the sum of all the networks
         List<Integer> scans; //the final amount of scans is the smallest scan performed
         List<Integer> finalScans = new LinkedList<>();
@@ -60,10 +67,10 @@ public class Main {
                     if (node.getFragments().contains(frag)) {
                         int[] results = query.matches(frag, fragType);
                         node.addScans(results[0]);
-                        node.addNetworks(results[1]);
                         if (!node.equals(initiator)) {
                             node.addNetworks(results[1]);
                         }
+
                     }
                 }
             }
@@ -198,13 +205,13 @@ public class Main {
     /*
         Generates a sample workload with example queries - right now, just a list of "WHERE VALUE = *"s
      */
-    public static List<Query> generateWorkload() {
+    public static List<Query> generateWorkload(int selectivity) {
         Random rand = new Random();
         Random rg = new Random();
         List<Query> workload = new LinkedList<>();
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 1000; i++) {
             int mid = rand.nextInt(17)+2000;
-            int Y = (int) Math.floor(Math.abs(rg.nextGaussian()*10));
+            int Y = (int) Math.floor(Math.abs(rg.nextGaussian()*selectivity));
             int start = Math.max(mid - Y, 2000);
             int end = Math.min(mid + Y, 2020);
             int extra = rand.nextInt(5)+1;
@@ -222,12 +229,9 @@ public class Main {
 
         // change this!
         // ranges for "Year" from [x, y)
-        valRanges.add(new int[]{2000, 2003});
-        valRanges.add(new int[]{2003, 2006});
-        valRanges.add(new int[]{2006, 2009});
-        valRanges.add(new int[]{2009, 2012});
-        valRanges.add(new int[]{2012, 2015});
-        valRanges.add(new int[]{2015, 2020});
+        valRanges.add(new int[]{2000, 2006});
+        valRanges.add(new int[]{2006, 2012});
+        valRanges.add(new int[]{2012, 2020});
 
         return valRanges;
     }
