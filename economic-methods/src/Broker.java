@@ -42,6 +42,8 @@ public class Broker {
      */
     public void evaluateFragments() {
         List<Double> variances = new LinkedList<>();
+
+        // TODO: weighted random, not every fragment
         for (Fragment frag : fragments) {
             variances.add(frag.getVariance());
         }
