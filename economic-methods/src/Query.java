@@ -8,12 +8,12 @@ public class Query {
     // fragments required for query
     // reads (# of tuples) required for query
     double price;
-    List<Fragment> frags;
-    List<Row> rows;
-    int startValue;
-    int endValue;
+    int start;
+    int end;
 
-    public Query(double price) {
+    public Query(double price, int start, int end) {
         this.price = price;
+        this.start = start;
+        this.end = end;
     }
 }

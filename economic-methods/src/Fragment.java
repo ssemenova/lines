@@ -10,7 +10,8 @@ public class Fragment {
     int size;
     int shares;
     int densityFrag;
-    Map<Integer, Integer> densityTuples;
+    Map<Integer, Double> densityTuples; // TODO: interval tree
+    int numQueries;
 
     public Fragment(int start, int end) {
         this.start = start;
@@ -29,7 +30,7 @@ public class Fragment {
         densityTuples = new HashMap<>();
 
         for (int i = start; i < end; i++) {
-            densityTuples.put(i, 0);
+            densityTuples.put(i, 0.0);
         }
 
         calculateDensityFromEstimates();
@@ -38,9 +39,10 @@ public class Fragment {
     /*
         Update density estimate
      */
-    public void updateDensityEstimate() {
-        // TODO: write this
-        // TODO: How often is density estimate updated?
+    public void updateDensityFrag(Query q) {
+        for (int i = start; i < end; i++) {
+            densityTuples.replace(i,(q.price + densityTuples.get(i)) / numQueries);
+        }
 
         calculateDensityFromEstimates();
     }
@@ -59,34 +61,21 @@ public class Fragment {
     /*
         Get the variance for a fragment
      */
-    public double getVariance(Database DB) {
+    public double getVariance() {
         double variance;
-
         double sum = 0;
         for (int i = start; i < end; i++) {
-            sum += (densityTuples.get(i) - (densityFrag/(end-start)))^2;
+            sum += Math.pow((densityTuples.get(i) - (densityFrag/(end-start))), 2);
         }
-
         variance = sum / (end - start);
-
-        return 0.0;
+        return variance;
     }
 
     /*
-        Update information after a split
-        To split a fragment, the first fragment object is kept the same and updated,
-        while a new fragment object is created for the second
-
-        Update information after a join
-        To join three fragments into two, the first two fragment objects are updated,
-        while the third fragment object is deleted
-
-        Updating a fragment includes updating its start and end rows, and recalculating the density for each of the rows
+        Update information after a split or join
      */
-    public void updateAfterSplitorJoin(int newStart, int newEnd) {
-        this.start = newStart;
-        this.end = newEnd;
-        updateDensityEstimate();
+    public void updateAfterSplitorJoin() {
+        //TODO: move density tuples over to another fragment instead of deleting and recreating
     }
 
     public String toString() {
