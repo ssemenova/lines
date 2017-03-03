@@ -15,10 +15,10 @@ public class Main {
         int DBrows = 10; // rows in database
 
         // FRAGMENTS
-        int fragAmount = 5; // amount of unique fragments to create
+        int[] fragParts = new int[]{0, 2, 4, 6, 8, 10}; // amount of unique fragments to create
 
         // QUERIES
-        int price = 10; // TODO: not an int?
+        int price = 10; // TODO: not an int? How is price set?
 
         // RUNNING
         int time = 5000;
@@ -27,7 +27,7 @@ public class Main {
 
 
         /* INITIALIZE EVERYTHING */
-        Broker broker = new Broker(createFragments(fragAmount), createNodes(numNodes, nodeCost, nodeDisk), DBrows);
+        Broker broker = new Broker(createFragments(fragParts), createNodes(numNodes, nodeCost, nodeDisk), DBrows);
 
 
         /* START SENDING QUERIES */
@@ -48,12 +48,18 @@ public class Main {
                 broker.evaluateFragments();
             }
             currentTime++;
+
+            // TODO: when to redestribute fragments among nodes?
         }
     }
 
-    // TODO: doesn't work
-    public static List<Fragment> createFragments(int fragAmount) {
+    // TODO: maybe not this shitty next time? not super important though
+    public static List<Fragment> createFragments(int[] fragParts) {
         List<Fragment> frags = new LinkedList<>();
+
+        for (int i = 1; i < fragParts.length; i++) {
+            frags.add(new Fragment(fragParts[i-1], fragParts[i]));
+        }
 
         return frags;
     }
@@ -66,6 +72,7 @@ public class Main {
         return nodes;
     }
 
+    // TODO: use this instead of uniform
     private static int getPoissonRandom(double mean) {
         Random r = new Random();
         double L = Math.exp(-mean);

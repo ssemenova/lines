@@ -1,10 +1,6 @@
 import com.lodborg.intervaltree.IntervalTree;
 
-import java.sql.Time;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by seaurchi on 2/17/17.
@@ -21,14 +17,15 @@ public class Broker {
         this.QPW = 0;
         this.nodes = nodes;
         this.DBsize = DBsize;
+        distributeFragments();
     }
 
     /*
         Process a query
      */
     public void processQuery(Query q) {
-        List<Fragment> fragsNeeded = new LinkedList<>(); // never use this - why is it necessary?
-        //find fragments needed
+        List<Fragment> fragsNeeded = new LinkedList<>(); // TODO: never use this - why is it necessary to keep a list of needed queries?
+
         for (Fragment frag : fragments) {
             if ((frag.start <= q.start && frag.end > q.start) || (frag.end >= q.end && frag.start < q.end )) {
                 fragsNeeded.add(frag);
@@ -43,11 +40,53 @@ public class Broker {
     public void evaluateFragments() {
         List<Double> variances = new LinkedList<>();
 
-        // TODO: weighted random, not every fragment
+        Map<Fragment, Double> fragVar = new HashMap<>();
+
         for (Fragment frag : fragments) {
-            variances.add(frag.getVariance());
+            fragVar.put(frag, frag.getVariance());
         }
 
+
+        // Split fragments
+        // TODO: choose weighted random fragment to split or join
+//        Fragment chosenFrag;
+//        findSplitPoint(chosenFrag);
+
+        //Join fragments
+        Collections.sort(fragments, new Comparator<Fragment>(){
+            public int compare(Fragment frag1, Fragment frag2) {
+                if (frag1.start < frag2.start) {
+                    return -1;
+                } else {
+                    return 1;
+                }
+            }
+        });
+
+        List<Double> joinVarSum = new LinkedList<>();
+        double var;
+        for (int i = 0; i < Math.ceil(fragments.size()/3); i = i*3) {
+            var = 0;
+            for (int j = 0; j < 3; j++) {
+                var += fragments.get(i+j).getVariance();
+            }
+        }
+
+
+
+        // TODO: call findSplitPoint on that fragment
+
+
+        // TODO: call updateAfterSplitorJoin on all fragments involved
+
+    }
+
+    /*
+        Finds a split point that minimizes the variance in the fragment
+     */
+    private int findSplitPoint(Fragment frag) {
+        // TODO: write
+        return 0;
     }
 
     /*
@@ -60,10 +99,6 @@ public class Broker {
         frag.end = S;
         Fragment newFrag = new Fragment(S, end);
         fragments.add(newFrag);
-
-        // TODO: figure it out
-
-        // frag.updateAfterSplitorJoin();
     }
 
     /*
