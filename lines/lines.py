@@ -7,6 +7,12 @@ import random
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+try:
+    import progressbar
+    bar_support = True
+except ImportError:
+    print("Do pip install progressbar2 for a sweet progress bar")
+    bar_support = False
 
 USE_IN_MEMORY = False
 
@@ -27,9 +33,14 @@ def main():
     classification = []
     error = .5
     for template in templatesLatencies:
-        for i in range(0,250):
-            # TODO: clean this up
-            print("Executing query", i)
+        print("Executing Queries")
+        if bar_support: 
+            bar = progressbar.ProgressBar(max_value=249)
+        else:
+            bar = lambda x: x # bar does nothing if it can't be imported
+        for i in bar(range(250)):
+            if not bar_support: 
+                print("Executing query", i)
             randomParam = random.randrange(1,4)
             x.append(randomParam)
             resultLatency = make_queries(conn, randomParam, template)
